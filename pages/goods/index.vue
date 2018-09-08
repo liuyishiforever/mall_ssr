@@ -1,98 +1,109 @@
 <template>
-  <div class="goods">
-    <div class="menu-wrapper" ref="menuWrapper">
-      <ul>
-        <li v-for="(item, index) in goods" class="menu-item" @click="selectMenu(index, $event)"
-            :class="{'current': currentIndex === index}" ref="menuList">
+  <div>
+    <div class="goods">
+      <div class="menu-wrapper" ref="menuWrapper">
+        <ul>
+          <li v-for="(item, index) in goods" class="menu-item" :class="{'current': currentIndex === index}"
+              @click="selectMenu(index, $event)" ref="menuList">
           <span class="text border-1px">
             <span v-show="item.type > 0" class="icon" :class="classMap[item.type]"></span>{{item.name}}
           </span>
-        </li>
-      </ul>
-    </div>
-    <div class="foods-wrapper" ref="foodsWrapper">
-      <ul>
-        <li class="food-list" v-for="item in goods" ref="foodList">
-          <h1 class="title">{{item.name}}</h1>
-          <ul>
-            <li v-for="food in item.foods" class="food-item border-1px">
-              <div class="icon"><img v-lazy="food.icon"></div>
-              <div class="content">
-                <h2 class="name">{{food.name}}</h2>
-                <p class="desc">{{food.description}}</p>
-                <div class="extra">
-                  <span class="count">月售{{food.sellCount}}</span><span>好评率{{food.rating}}%</span>
+          </li>
+        </ul>
+      </div>
+      <div class="foods-wrapper" ref="foodsWrapper">
+        <ul>
+          <li class="food-list" v-for="item in goods" ref="foodList">
+            <h1 class="title">{{item.name}}</h1>
+            <ul>
+              <li v-for="food in item.foods" class="food-item border-1px" @click="selectFood(food, $event)">
+                <div class="icon"><img v-lazy="food.icon"></div>
+                <div class="content">
+                  <h2 class="name">{{food.name}}</h2>
+                  <p class="desc">{{food.description}}</p>
+                  <div class="extra">
+                    <span class="count">月售{{food.sellCount}}</span><span>好评率{{food.rating}}%</span>
+                  </div>
+                  <div class="price">
+                    <span class="now">¥{{food.price}}</span><span class="old"
+                                                                  v-show="food.oldPrice">¥{{food.oldPrice}}</span>
+                  </div>
                 </div>
-                <div class="price">
-                  <span class="now">¥{{food.price}}</span><span class="old"
-                                                                v-show="food.oldPrice">¥{{food.oldPrice}}</span>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </li>
-      </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <shopcart></shopcart>
     </div>
+
+    <food :food="sclectedFood" ref="food"></food>
   </div>
+
 </template>
 
 <script>
   import axios from 'axios';
   import BScroll from 'better-scroll'
+  import food from '~/components/food/food'
+  import shopcart from '~/components/shopcart/shopcart'
 
   export default {
     data() {
       return {
         goods: [],
         heightList: [],
-        scrollY: 0
+        scrollY: 0,
+        sclectedFood: {}
       }
     },
     computed: {
-      // 4. 计算currentIndex, 计算foodsScroll滚动时落在哪个区间里
       currentIndex() {
         for (let i = 0; i < this.heightList.length; i++) {
           let height1 = this.heightList[i];
           let height2 = this.heightList[i + 1];
           if (!height2 || (this.scrollY >= height1 && this.scrollY < height2)) {
-            this._followScroll(i);
-            return i;
+            this._follow(i);
+            return i
           }
         }
         return 0;
       }
+
     },
     methods: {
+      selectFood(food, event) {
+        if (!event._constructed) {
+          return;
+        }
+        this.sclectedFood = food;
+        this.$refs.food.show();
+      },
 
-      // 5. menu 上绑定点击事件selectMenu
+
       selectMenu(index, event) {
         if (!event._constructed) {
           return;
         }
-        console.log('click');
         let foodList = this.$refs.foodList;
         let el = foodList[index];
         this.foodsScroll.scrollToElement(el, 300);
       },
 
-      // 1. 初始化menuScroll和foodsScroll
       _initScroll() {
         this.menuScroll = new BScroll(this.$refs.menuWrapper, {
           click: true
-        });
+        })
         this.foodsScroll = new BScroll(this.$refs.foodsWrapper, {
           click: true,
           probeType: 3
-        });
-        // 3.监听foodsScroll的scorll事件, 计算scrollY的值
+        })
         this.foodsScroll.on('scroll', (pos) => {
           if (pos.y <= 0) {
             this.scrollY = Math.abs(Math.round(pos.y));
-            console.log("scrollY: " + this.scrollY);
           }
         })
       },
-      // 2. 计算heightList
       _calHeight() {
         let foodList = this.$refs.foodList;
         let height = 0;
@@ -102,15 +113,12 @@
           height += item.clientHeight;
           this.heightList.push(height);
         }
-        console.log("heightList: " + this.heightList)
       },
-      // 编写_followScroll方法
-      _followScroll(index) {
+      _follow(index) {
         let menuList = this.$refs.menuList;
         let el = menuList[index];
         this.menuScroll.scrollToElement(el, 300, 0, -100);
       }
-
     },
     mounted() {
       setTimeout(() => {
@@ -131,6 +139,10 @@
         this.goods = res.data;
       })
     },
+    components: {
+      food: food,
+      shopcart: shopcart
+    }
   }
 </script>
 
@@ -153,7 +165,7 @@
       .menu-item {
         display: table;
         height: 108px;
-        width: 108px;
+        width: 112px;
         padding: 0 24px;
         line-height: 28px;
         font-size: 28px;
@@ -275,5 +287,6 @@
 
     }
   }
+
 
 </style>

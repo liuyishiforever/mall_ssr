@@ -17,8 +17,12 @@ module.exports = {
   },
   /*
   ** Customize the progress bar color
+  * loading: false 可取消loading组件
   */
   loading: {color: '#10B3F5'},
+  /**
+   * 引入全局css样式
+   */
   css: [
     "~common/scss/index.scss"
   ],
@@ -54,7 +58,6 @@ module.exports = {
         remUnit: 75
       })
     ],
-
   },
   plugins: ['~plugins/vue-lazyload', {src: '~plugins/lib-flexible', ssr: false}]
 }
