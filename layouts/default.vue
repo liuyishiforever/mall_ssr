@@ -2,8 +2,9 @@
   <div>
     <v-header :seller="seller"></v-header>
     <bar></bar>
-    <nuxt/>
+    <router-view :seller="seller"/>
   </div>
+
 
 </template>
 <script>
@@ -13,6 +14,7 @@
   import axios from 'axios'
 
   export default {
+
     data() {
       return {
         seller: {}

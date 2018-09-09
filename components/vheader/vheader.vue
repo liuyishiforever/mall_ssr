@@ -68,6 +68,8 @@
   import title from '~/components/title/title'
   import star from '~/components/star/star'
 
+  import axios from 'axios'
+
 
   export default {
     name: "vheader",
@@ -78,7 +80,7 @@
     },
     data() {
       return {
-        detailShow: false
+        detailShow: false,
       }
     },
     created() {

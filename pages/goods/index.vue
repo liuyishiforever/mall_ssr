@@ -28,13 +28,16 @@
                     <span class="now">¥{{food.price}}</span><span class="old"
                                                                   v-show="food.oldPrice">¥{{food.oldPrice}}</span>
                   </div>
+                  <div class="cartcontrol-wrapper">
+                    <cartcontrol :food="food"></cartcontrol>
+                  </div>
                 </div>
               </li>
             </ul>
           </li>
         </ul>
       </div>
-      <shopcart></shopcart>
+      <shopcart :selectFoods="selectFoods" :minPrice="seller.minPrice" :deliveryPrice="seller.deliveryPrice"></shopcart>
     </div>
 
     <food :food="sclectedFood" ref="food"></food>
@@ -47,8 +50,14 @@
   import BScroll from 'better-scroll'
   import food from '~/components/food/food'
   import shopcart from '~/components/shopcart/shopcart'
+  import Cartcontrol from "../../components/cartcontrol/cartcontrol";
 
   export default {
+    props: {
+      seller: {
+        type: Object
+      }
+    },
     data() {
       return {
         goods: [],
@@ -58,12 +67,25 @@
       }
     },
     computed: {
+
+      selectFoods() {
+        let foods = [];
+        this.goods.forEach((good) => {
+          good.foods.forEach((food) => {
+            if (food.count) {
+              foods.push(food);
+            }
+          })
+        });
+        return foods;
+      },
+
       currentIndex() {
         for (let i = 0; i < this.heightList.length; i++) {
           let height1 = this.heightList[i];
           let height2 = this.heightList[i + 1];
           if (!height2 || (this.scrollY >= height1 && this.scrollY < height2)) {
-            this._follow(i);
+            this._followScroll(i);
             return i
           }
         }
@@ -72,6 +94,7 @@
 
     },
     methods: {
+
       selectFood(food, event) {
         if (!event._constructed) {
           return;
@@ -114,7 +137,7 @@
           this.heightList.push(height);
         }
       },
-      _follow(index) {
+      _followScroll(index) {
         let menuList = this.$refs.menuList;
         let el = menuList[index];
         this.menuScroll.scrollToElement(el, 300, 0, -100);
@@ -123,23 +146,19 @@
     mounted() {
       setTimeout(() => {
         this._initScroll();
-      }, 20)
-    },
-    watch: {
-      goods() {
-        setTimeout(() => {
-          this._calHeight();
-        }, 20)
-      }
+        this._calHeight();
+      }, 100);
     },
     created() {
       this.classMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee'];
-      let url = 'https://api.myjson.com/bins/17ca0c';
-      axios.get(url).then((res) => {
-        this.goods = res.data;
+    },
+    asyncData() {
+      return axios.get('https://api.myjson.com/bins/17ca0c').then((res) => {
+        return {goods: res.data}
       })
     },
     components: {
+      Cartcontrol,
       food: food,
       shopcart: shopcart
     }
@@ -278,6 +297,11 @@
                 font-size: 20px;
                 color: rgb(147, 153, 159);
               }
+            }
+            .cartcontrol-wrapper {
+              position: absolute;
+              right: 24px;
+              bottom: 24px;
             }
           }
 
