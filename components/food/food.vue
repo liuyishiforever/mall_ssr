@@ -18,6 +18,15 @@
             <span class="now">¥{{food.price}}</span>
             <span class="old">¥{{food.oldPrice}}</span>
           </div>
+          <div class="cartcontrol-wrapper">
+            <cartcontrol @add="addFood" :food="food"></cartcontrol>
+          </div>
+          <transition name="fade">
+            <div @click.stop.prevent="addFirst" class="buy" v-show="!food.count || food.count === 0">
+              加入购物车
+            </div>
+          </transition>
+
         </div>
         <space></space>
         <div class="info">
@@ -34,7 +43,10 @@
 </template>
 
 <script>
+
+  import Vue from 'vue';
   import space from '~/components/space/space';
+  import cartcontrol from '~/components/cartcontrol/cartcontrol';
   import BScroll from 'better-scroll'
 
   export default {
@@ -59,10 +71,22 @@
       },
       hide() {
         this.showFlag = false;
+      },
+      addFood(target) {
+        this.$emit('add', target);
+      },
+      addFirst(event) {
+        if (!event._constructed) {
+          return;
+        }
+        this.$emit('add', event.target);
+        Vue.set(this.food, 'count', 1);
+
       }
     },
     components: {
-      space: space
+      space: space,
+      cartcontrol: cartcontrol
     }
 
   }
@@ -146,6 +170,34 @@
           font-size: 20px;
           color: rgb(147, 153, 159);
         }
+      }
+      .cartcontrol-wrapper {
+        position: absolute;
+        right: 24px;
+        bottom: 24px;
+      }
+      .buy {
+        position: absolute;
+        right: 36px;
+        bottom: 36px;
+        z-index: 10;
+        height: 48px;
+        line-height: 48px;
+        padding: 0 24px;
+        box-sizing: border-box;
+        border-radius: 24px;
+        font-size: 20px;
+        color: #fff;
+        background: rgb(0, 160, 220);
+        opacity: 1;
+        &.fade-enter-active, &.fade-leave-active {
+          transition: all 0.2s;
+        }
+        &.fade-enter, &.fade-leave-to {
+          opacity: 0;
+          z-index: -1;
+        }
+
       }
     }
     .info {
