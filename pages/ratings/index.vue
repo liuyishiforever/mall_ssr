@@ -1,5 +1,5 @@
 <template>
-  <div class="ratings">
+  <div class="ratings" ref="ratings">
     <div class="ratings-content">
       <div class="overview">
         <div class="overview-left">
@@ -24,35 +24,34 @@
           </div>
         </div>
       </div>
+      <space></space>
+      <ratingselect @select="selectRating" @toggle="toggleContent" :selectType="selectType" :onlyContent="onlyContent"
+                    :ratings="ratings"></ratingselect>
+      <div class="ratings-wrapper">
+        <ul>
+          <li class="rating-item" v-for="rating in ratings" v-show="needShow(rating.rateType, rating.text)">
+            <div class="avatar">
+              <img :src="rating.avatar">
+            </div>
+            <div class="content">
+              <h1 class="name">{{rating.name}}</h1>
+              <div class="star-wrapper">
+                <star :size="24" :score="rating.score"></star>
+                <span class="delivery" v-show="rating.deliveryTime">{{rating.deliveryTime}}分钟送达</span>
+              </div>
+              <p class="text">{{rating.text}}</p>
+              <div class="recommend" v-if="rating.recommend && rating.recommend.length">
+                <span class="icon-thumb_up"></span>
+                <span class="item" v-for="item in rating.recommend">{{item}}</span>
+              </div>
+              <div class="time">
+                {{rating.rateTime | formatDate}}
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
-    <space></space>
-    <ratingselect @select="selectRating" @toggle="toggleContent" :selectType="selectType" :onlyContent="onlyContent"
-                  :ratings="ratings"></ratingselect>
-    <div class="ratings-wrapper">
-      <ul>
-        <li class="rating-item" v-for="rating in ratings">
-          <div class="avatar">
-            <img src="rating.avatar" alt="">
-          </div>
-          <div class="content">
-            <h1 class="name">{{rating.name}}</h1>
-            <div class="star-wrapper">
-              <star :size="24" :score="rating.score"></star>
-              <span class="delivery" v-show="rating.deliveryTime">{{rating.deliveryTime}}</span>
-            </div>
-            <p class="text">{{rating.text}}</p>
-            <div class="recommend" v-if="rating.recommend && rating.recommend.length">
-              <span class="icon-thumb_up"></span>
-              <span class="item" v-for="item in rating.recommend">{{item}}</span>
-            </div>
-            <div class="tiem">
-              {{rating.rateTime | formatDate}}
-            </div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
 
   </div>
 </template>
@@ -63,6 +62,7 @@
   import space from '~/components/space/space'
   import ratingselect from '~/components/ratingselect/ratingselect'
   import {formatDate} from '../../common/js/date';
+  import BScroll from 'better-scroll'
 
 
   const ALL = 2;
@@ -80,6 +80,14 @@
         onlyContent: true
       }
     },
+    mounted() {
+      setTimeout(() => {
+        this.scroll = new BScroll(this.$refs.ratings, {
+          click: true
+        })
+      }, 20)
+
+    },
     created() {
       let url = 'https://api.myjson.com/bins/snk4w';
       axios.get(url).then((res) => {
@@ -87,8 +95,28 @@
       })
     },
     methods: {
-      selectRating() {
 
+      needShow(type, text) {
+        if (this.onlyContent && !text) {
+          return false
+        }
+        if (this.selectType === ALL) {
+          return true;
+        } else {
+          return this.selectType === type;
+        }
+      },
+      selectRating(type) {
+        this.selectType = type;
+        this.$nextTick(() => {
+          this.scroll.refresh();
+        })
+      },
+      toggleContent() {
+        this.onlyContent = !this.onlyContent;
+        this.$nextTick(() => {
+          this.scroll.refresh();
+        })
       }
     },
     components: {
@@ -107,6 +135,9 @@
 </script>
 
 <style lang="scss">
+
+  @import "../../common/scss/mixin";
+
   .ratings {
     position: absolute;
     top: 348px;
@@ -177,6 +208,81 @@
           .delivery {
             margin-left: 24px;
             font-size: 24px;
+            color: rgb(147, 153, 159);
+          }
+        }
+      }
+    }
+    .ratings-wrapper {
+      padding: 0 36px;
+      .rating-item {
+        display: flex;
+        padding: 36px 0;
+        @include border-1px(rgba(7, 17, 27, 0.1));
+        .avatar {
+          flex: 0 0 56px;
+          width: 48px;
+          margin-right: 24px;
+          img {
+            width: 56px;
+            height: 56px;
+            margin-right: 24px;
+            border-radius: 50%;
+          }
+        }
+        .content {
+          position: relative;
+          flex: 1;
+          .name {
+            margin-bottom: 8px;
+            line-height: 24px;
+            font-size: 20px;
+            color: rgb(7, 17, 27);
+          }
+          .star-wrapper {
+            margin-bottom: 12px;
+            font-size: 0;
+            .star {
+              display: inline-block;
+              margin-right: 12px;
+              vertical-align: top;
+            }
+            .delivery {
+              display: inline-block;
+              vertical-align: top;
+              line-height: 24px;
+              font-size: 20px;
+              color: rgb(147, 153, 159);
+            }
+          }
+          .text {
+            margin-bottom: 16px;
+            line-height: 36px;
+            color: rgb(7, 17, 27);
+            font-size: 24px;
+          }
+          .recommend {
+            line-height: 32px;
+            font-size: 0;
+            .icon-thumb_up, .item {
+              display: inline-block;
+              margin: 0 16px 8px 0;
+              font-size: 18px;
+            }
+            .item {
+              padding: 0 12px;
+              border: 1px solid rgba(7, 17, 27, 0.1);
+              border-radius: 2px;
+              color: rgb(147, 153, 159);
+              background: #fff;
+            }
+          }
+          .time {
+            position: absolute;
+            top: 0;
+            right: 0;
+            line-height: 24px;
+            font-size: 20px;
             color: rgb(147, 153, 159);
           }
         }
